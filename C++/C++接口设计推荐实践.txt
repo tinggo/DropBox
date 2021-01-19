@@ -1,0 +1,13 @@
+接口一般都是以I开头做为名字，今天在code review过程中总结出一种我比较认同的接口代码规则
+
+struct IInterfaceName
+{
+    virtual void functionName() = 0;
+};
+
+讨论
+1. 关于使用 virtual ~IInterfaceName() = delete; 将析构函数删除会调职此类型无法被实例化。实例化包括在栈上创建对象，这种情况下析构函数会被自动调用。缺失析构函数会导致编译错误。
+所以删除析构函数的使用场景应该是那些全是static方法的类型。
+
+2. 为什么要使用struct呢？
+这是因为接口中的函数一般都是被暴露的，即然都是被暴露的，将接口变成struct可以省去添加关键字public。
