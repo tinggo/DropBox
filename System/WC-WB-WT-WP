@@ -1,0 +1,29 @@
+CPU为了加速CODE和DATA的存取，会将读写过的数据放在Cache中，以加速读写的数据。Cache是一个比主存小的多但快速的存储设备。
+Intel的实现中，Cache还有分层 (L1, L2, L3 Cache), CPU会先到L1 Cache中寻找所需要的数据，如果没有找到则前往L2 Cache，再没有找到便前往L3 Cache，真的在Cache中找不到才会到主存中寻找。
+
+专有名词
+Cache Line:
+替换进Cache的最小字节数。
+
+
+Fill:
+将主存加载到cache中的操作。
+
+Cache hit & Cache miss:
+在读取数据时，如果能够在Cache中找到，称之为Cache hit，反之称之为Cache miss。
+
+Write hit:
+在写数据时，如果此数据已经在Cache中，称之为Write hit，在Write hit发生时，有多种不同的策略。
+
+Write Back
+当Write hit发生时，写入cache。直到该缓存被驱逐时才会写回主存。实现复杂，性能较好。
+
+Write Through
+当Write hit发生时，写入cache后直接写入主存。实现简单，但是会触发总线写请求，影响性能。
+
+另外还有两种不使用缓存的写操作。
+Write Combine
+读写都不使用Cache,写操作会产生延迟，和其他写入操作合并在一起触发一次总线写请求。写的顺序无法保证，但性能较优，用于对于写顺序不敏感的显存中。
+
+Write Protected
+只有读操作可以使用缓存，写操作时直接写入主存。如果有Cache hit，将立即失效。
