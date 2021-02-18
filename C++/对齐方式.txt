@@ -1,0 +1,13 @@
+基本对齐方式（fundamental alignment）由alignof(std::max_align_t)表示。代表任何支持的对齐方式都小于此值。
+std::max_align_t由C++11引入。意思是只要按照alignof(std::max_align_t)可以满足任何类型的对齐要求。
+
+在C++17中引入__STDCPP_DEFAULT_NEW_ALIGNMENT__伴随着引入operator new(std::size_t count, std::align_val_t al)。为了分清楚怎样的对齐要求会用align版本的operator new，怎样的对齐要求会使用非align版本的new，__STDCPP_DEFAULT_NEW_ALIGNMENT__给出了明确的界定，任何大于此值的对齐要求都会使用align版本的new，除此之外全部使用非align版本的new。
+
+所以自从C++17之后引入关键点
+当重载operator new时，如果非align版本的operator new重载版本被调用到，说明此次分配对于alignment的要求小于等于__STDCPP_DEFAULT_NEW_ALIGNMENT__，但是你仍然不知道此次分配是来源于new char还是new short还是new long。按照传统C++的解决方法，将alignment设置成最大的alignment即可。那么起码这个值得大于等于alignof(std::max_align_t)。以MSVC为例，alignof(std::max_align_t)为8，那么这个值必须大于等于8。可是如果alignment需求是16的话，也会调用非align版本的new，此时按照8对齐就不能满足要求。所以该值必须被提升到__STDCPP_DEFAULT_NEW_ALIGNMENT__为了满足任何调用非align版本new的对齐需求。
+
+为什么编译器不将__STDCPP_DEFAULT_NEW_ALIGNMENT__设置成alignof(std::max_align_t)呢？这是由硬件的要求以及编译器的实现来决定的。各家都会按照自己的实际需求来设置，我们只要按照标准来做就可以了。我们也可以去细究为什么MSVC是16，但要记住其他平台会是另外一个值。
+
+那么在C++17以前C++11以后，没有__STDCPP_DEFAULT_NEW_ALIGNMENT__我们该如何对齐呢？注意：在C++17以前，没有__STDCPP_DEFAULT_NEW_ALIGNMENT__也没有operator new(std::size_t count, std::align_val_t al)。此时所有的operator new都会调用非align版本。那么这个版本的operator实现必须是最大情况，因为无法知道实际分配类型的实际对齐要求。我们只要按照alignof(std::max_align_of)即可。有个吊诡得问题是，我同样在PC平台上，我刚才用C++17用__STDCPP_DEFAULT_NEW_ALIGNMENT__已经知道我这个平台的硬件和编译器要求是16，那当我切换到C++11的编译器时，是否也应该用16呢？答案是不，因为C++11没有任何一条标准告诉我们类似于__STDCPP_DEFAULT_NEW_ALIGNMENT__这样的东西，那么它的编译器也不会假设它的operator new都会按照16对齐。我们只需要按照当前标准制定的对齐要求alignof(std::max_align_t)即可。
+
+那么在C++11之前得C++98时代，重载operator new该如何对齐呢？因为没有标准来规范一个统一的获取对齐信息的地方，那么只能让上层程序员根据自己平台的实际情况自己约束自己。
